@@ -88,7 +88,7 @@ class MainActivity : AppCompatActivity(),NoteAdapter.OnNoteClickListener,OnDataP
 
     override fun onDelete(note: Note) {
         val builder=AlertDialog.Builder(this)
-        builder.setTitle("确定要删除这条笔记吗")
+        builder.setTitle("确定要删除这条笔记吗?")
         builder.setMessage("确定要删除这条笔记吗1")
         builder.setPositiveButton("确认"){dialog,which->
             databaseHelper.deleteNOte(note.id)
