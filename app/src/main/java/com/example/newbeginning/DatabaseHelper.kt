@@ -19,6 +19,7 @@ class DatabaseHelper(context: Context):SQLiteOpenHelper(context,DATABASE_NAME, n
         const val COLUMN_ID = "id"
         const val COLUMN_TIME = "time"
         const val COLUMN_CONTENT = "content"
+
     }
 
     override fun onCreate(db: SQLiteDatabase?) {
@@ -42,6 +43,7 @@ class DatabaseHelper(context: Context):SQLiteOpenHelper(context,DATABASE_NAME, n
         val value=ContentValues().apply {
             put(COLUMN_TIME,time)
             put(COLUMN_CONTENT,context)
+
         }
         db.insert(TABLE_NOTES,null,value)
         db.close()

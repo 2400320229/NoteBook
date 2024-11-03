@@ -1,5 +1,8 @@
 package com.example.newbeginning
 
+import android.app.Activity
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
@@ -9,6 +12,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import android.util.TypedValue
+import android.view.View
+import android.widget.ImageButton
+import androidx.activity.result.ActivityResult
 
 
 class MainActivity : AppCompatActivity(),NoteAdapter.OnNoteClickListener,OnDataPass {
@@ -17,12 +23,16 @@ class MainActivity : AppCompatActivity(),NoteAdapter.OnNoteClickListener,OnDataP
     private lateinit var adapter: NoteAdapter
     private var notesList:MutableList<Note> = mutableListOf()
 
+    private lateinit var imageButton: ImageButton
+    private val PICK_IMAGE_REQUEST = 1
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main2)
         val editText_time:EditText=findViewById(R.id.et_time)
         val editText_context:EditText=findViewById(R.id.et_context)
         val addbutton:Button=findViewById(R.id.add_note_button)
+        val addImage:ImageButton=findViewById(R.id.ImageButton)
 
 
         databaseHelper=DatabaseHelper(this)
@@ -51,8 +61,44 @@ class MainActivity : AppCompatActivity(),NoteAdapter.OnNoteClickListener,OnDataP
             }
 
         }
+        addImage.setOnClickListener{
+            openFileChoose()
+        }
+
 
     }
+    //打开文件夹还需要去AndroidManifest.xml中设置权限
+    private fun openFileChoose(){
+        val intent=Intent(Intent.ACTION_PICK)
+        intent.type="image/*"
+        startActivityForResult(intent,this.PICK_IMAGE_REQUEST)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if(requestCode==PICK_IMAGE_REQUEST&&resultCode== Activity.RESULT_OK&&data!=null){
+            val imageUri=data.data
+            imageButton.setImageURI(imageUri) // 设置选中的图片
+            imageButton.visibility = View.VISIBLE // 显示 ImageView
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if(requestCode==1){
+            if(grantResults.isNotEmpty()&&grantResults[0]==PackageManager.PERMISSION_GRANTED){
+                // 权限被授予，继续操作
+            } else {
+                // 权限被拒绝，处理相应逻辑
+            }
+        }
+    }
+
+
 
     private fun loadNotes(){
         notesList.clear()
