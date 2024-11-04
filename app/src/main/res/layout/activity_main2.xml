@@ -5,15 +5,22 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#0ff">
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:id="@+id/add_fragment"/>
+
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/add_note"
+            android:text="添加"/>
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/clear_list"
+            android:text="清空"/>
 
 
         <androidx.recyclerview.widget.RecyclerView
@@ -25,6 +32,10 @@
             android:padding="10dp"
             android:layout_weight="3"/>
     </LinearLayout>
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:id="@+id/add_fragment"/>
     <FrameLayout
         android:id="@+id/fragment_container"
         android:layout_width="300dp"

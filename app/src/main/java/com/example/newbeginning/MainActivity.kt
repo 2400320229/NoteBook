@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
@@ -15,9 +16,12 @@ import android.util.TypedValue
 import android.view.View
 import android.widget.ImageButton
 import androidx.activity.result.ActivityResult
+import androidx.fragment.app.Fragment
+interface transAddNote{
+     fun addNote(addtime:String,addcontext:String)
+}
 
-
-class MainActivity : AppCompatActivity(),NoteAdapter.OnNoteClickListener,OnDataPass {
+class MainActivity : AppCompatActivity(),NoteAdapter.OnNoteClickListener,OnDataPass,transAddNote {
     private lateinit var databaseHelper: DatabaseHelper
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: NoteAdapter
@@ -26,13 +30,13 @@ class MainActivity : AppCompatActivity(),NoteAdapter.OnNoteClickListener,OnDataP
     private lateinit var imageButton: ImageButton
     private val PICK_IMAGE_REQUEST = 1
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main2)
-        val editText_time:EditText=findViewById(R.id.et_time)
-        val editText_context:EditText=findViewById(R.id.et_context)
-        val addbutton:Button=findViewById(R.id.add_note_button)
-        val addImage:ImageButton=findViewById(R.id.ImageButton)
+
+        val addbutton:Button=findViewById(R.id.add_note)
+        val clearbutton:Button=findViewById(R.id.clear_list)
 
 
         databaseHelper=DatabaseHelper(this)
@@ -50,20 +54,21 @@ class MainActivity : AppCompatActivity(),NoteAdapter.OnNoteClickListener,OnDataP
         loadNotes()
 
         addbutton.setOnClickListener{
-            val addtime=editText_time.text.toString().trim()
-            val addcontent=editText_context.text.toString().trim()
-            if(addtime.isNotEmpty()||addcontent.isNotEmpty()) {
-                addNote(addtime, addcontent)
-                editText_time.text.clear()
-                editText_context.text.clear()
-            }else{
-                Toast.makeText(this,"请输入信息~",Toast.LENGTH_SHORT).show()
+            showAddFragment()
+        }
+        clearbutton.setOnClickListener{
+            val builder=AlertDialog.Builder(this)
+            builder.setTitle("确认删除笔记")
+            builder.setMessage("您确定要删除所有笔记吗？此操作无法撤销。")
+            builder.setPositiveButton("确定") {dialog,which->
+                clearData()
             }
+            builder.setNegativeButton("取消"){dialog,which->
+                dialog.dismiss()
+            }
+            builder.create().show()
+        }
 
-        }
-        addImage.setOnClickListener{
-            openFileChoose()
-        }
 
 
     }
@@ -105,11 +110,33 @@ class MainActivity : AppCompatActivity(),NoteAdapter.OnNoteClickListener,OnDataP
         notesList.addAll(databaseHelper.getAllNotes())
         adapter.notifyDataSetChanged()
     }
-    private fun addNote(addtime:String,addcontext:String){
+    override fun addNote(addtime:String,addcontext:String){
         val time = addtime
         val content = addcontext
         databaseHelper.addNote(time, content)
         loadNotes()
+        removeAddF()
+    }
+    private fun clearData(){
+        val db=databaseHelper.writableDatabase
+        try {
+            db.execSQL("DELETE FROM ${DatabaseHelper.TABLE_NOTES}")
+            db.execSQL("DELETE FROM sqlite_sequence WHERE name='${DatabaseHelper.TABLE_NOTES}'") // 可选：重置自增长
+            loadNotes()
+        }catch (e:Exception){
+            Log.e("clear error","数据清理出错:${e.message}")
+        }finally {
+            db.close()
+        }
+
+    }
+    private fun showAddFragment(){
+        val fragment=AddFragment()
+        val fragmentTransaction=supportFragmentManager.beginTransaction()
+        fragmentTransaction.replace(R.id.add_fragment,fragment)
+        fragmentTransaction.addToBackStack(null) // 可选，允许后退
+        fragmentTransaction.commit()
+        databaseHelper.getAllNotes()
     }
 
 
@@ -145,9 +172,17 @@ class MainActivity : AppCompatActivity(),NoteAdapter.OnNoteClickListener,OnDataP
         }
         builder.create().show()
     }
-    private fun removeF(){
+    private fun removeEditF(){
         val fragmentTransaction = supportFragmentManager.beginTransaction()
         val fragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
+        if (fragment != null) {
+            fragmentTransaction.remove(fragment)
+        }
+        fragmentTransaction.commit()
+    }
+    private fun removeAddF(){
+        val fragmentTransaction = supportFragmentManager.beginTransaction()
+        val fragment = supportFragmentManager.findFragmentById(R.id.add_fragment)
         if (fragment != null) {
             fragmentTransaction.remove(fragment)
         }
@@ -158,7 +193,7 @@ class MainActivity : AppCompatActivity(),NoteAdapter.OnNoteClickListener,OnDataP
 
         onEdit(note,context)
 
-        removeF()
+        removeEditF()
     }
 
 
